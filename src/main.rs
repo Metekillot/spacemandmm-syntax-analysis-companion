@@ -78,6 +78,7 @@ fn char_input(prompt: &str) -> char {
 }
 
 fn get_dme_path_from_dir() -> PathBuf {
+    todo!("Refactor the logic for getting a dme into a loop that lets you retry instead of panicking if you fuck up.");
     let mut dme_dir: PathBuf = PathBuf::new();
     let init_input = l_i("Please input the .dme directory. '$env_var' to access an environment variable, '!command arg1 arg2 arg3' to invoke a process's output for the value.");
     match *&init_input
@@ -150,6 +151,7 @@ impl ParsedDream {
 fn add_dream(dream_space: &mut HashMap<String, Box<ParsedDream>>) {
     let dme_path = &get_dme_path_from_dir();
     println!("Dream parsing, please wait...");
+    todo!("Handle name collision here.");
     let new_dream = ParsedDream::new(dme_path);
     println!("Dream realized from {}", dme_path.display());
     let name = l_i("Please give a unique name for this Dream.");
@@ -210,7 +212,7 @@ fn hello_world() {
     ~~~~~~~~~~~~~~~~~~~~
     SpacemanDMM-Analysis-Companion  Copyright (C) 2025 Joshua 'Joan Metek Metekillot' Kidder
                                     joanmetek@gmail.com
-                                    
+
     This program comes with ABSOLUTELY NO WARRANTY; for details, see included LICENSE
     This is free software, and you are welcome to redistribute it
     under certain conditions; see included LICENSE for details
@@ -223,12 +225,19 @@ fn hello_world() {
 }
 fn main() {
     hello_world();
+    todo!("
+    Bust the current functionality into, at least
+    main.rs
+    parsed_dream.rs
+    dreaming.rs
+    input.rs
+    ");
     let mut dream_space: HashMap<String, Box<ParsedDream>> = HashMap::new();
     add_dream(&mut dream_space);
     loop {
         match c_i("'a'dd another dream\n'c'ontinue with your current dreams\n'l'ist your current dreams\n'm'odify your loaded dreams\n'q'uit dreaming"){
             'a' => add_dream(&mut dream_space),
-            'c' => todo!(),
+            'c' => todo!("need basic inspection functions, put these on ParsedDream"),
             'l' => list_dreams(&dream_space),
             'm' => modify_dreams(&mut dream_space),
             'q' => todo!(),
