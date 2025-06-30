@@ -13,7 +13,7 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/    
+*/
 use console::*;
 use dm::annotation::*;
 use dm::indents::*;
@@ -22,9 +22,8 @@ use dm::objtree::*;
 use dm::parser::*;
 use dm::preprocessor::*;
 use dm::*;
-use dmc::*;
+use std::collections::*;
 use std::env;
-use std::fs::*;
 use std::path::*;
 use std::process::*;
 use std::str::FromStr;
@@ -32,7 +31,6 @@ use std::sync::LazyLock;
 use std::vec::*;
 
 static TERMINAL: LazyLock<Term> = LazyLock::new(|| console::Term::stdout());
-
 use char_input as c_i;
 use line_input as l_i;
 use line_input_into as l_i_i;
@@ -113,58 +111,128 @@ fn get_dme_path_from_dir() -> PathBuf {
             dme_dir.push(init_input);
         }
     }
-    let resolved_dir_contents: Vec<DirEntry> = (*dme_dir)
+    (*dme_dir)
         .read_dir()
         .expect(&format!("Failed to read directory: {}", dme_dir.display()))
         .map(|res| res.expect("Invalid directory entry"))
-        .collect();
-
-    for entry in &resolved_dir_contents {
-        println!("{:?}", entry);
-    }
-
-    resolved_dir_contents
-        .iter()
         .filter(|file| file.file_name().to_str().unwrap().ends_with(".dme"))
         .next()
         .unwrap()
         .path()
 }
 
-pub(crate) struct ParsedDream<'a> {
+pub(crate) struct ParsedDream {
     context: Context,
     annotation_tree: AnnotationTree,
     object_tree: ObjectTree,
-    indexed_files: Vec<&'a Path>,
 }
 
-// a number-indexed array of the files so we can access them by FileId
-// because that's a private constructor and you can't index them with it otherwise...
+impl ParsedDream {
+    fn new(dme_path: &PathBuf) -> ParsedDream {
+        let context = Context::default();
+        let mut annotation_tree = AnnotationTree::default();
+        let pre_processor = Preprocessor::new(&context, dme_path.to_owned()).unwrap();
+        let indent_processor = IndentProcessor::new(&context, pre_processor);
+        let mut parser = Parser::new(&context, indent_processor);
+        let annotation_tree_mutable = &mut annotation_tree;
+        parser.annotate_to(annotation_tree_mutable);
 
-fn index_files_by_index(context: &Context) -> Vec<String> {
-    let mut indexed_paths: Vec<String> = Vec::new();
-    indexed_paths.push(String::from("DISREGARD_ALIGN_ITEM: Context FileID is 1-indexed"));
-    let file_list = context.file_list();
-    file_list.for_each(|path| {
-        let path_string = path.to_str().unwrap();
-        indexed_paths.push(path_string.to_owned());
-    });
-    indexed_paths
+        let object_tree = parser.parse_object_tree();
+        dmc::run(&context, &object_tree);
+        ParsedDream {
+            context,
+            annotation_tree,
+            object_tree,
+        }
+    }
 }
 
+fn add_dream(dream_space: &mut HashMap<String, Box<ParsedDream>>) {
+    let dme_path = &get_dme_path_from_dir();
+    println!("Dream parsing, please wait...");
+    let new_dream = ParsedDream::new(dme_path);
+    println!("Dream realized from {}", dme_path.display());
+    let name = l_i("Please give a unique name for this Dream.");
+    dream_space.insert(name, Box::new(new_dream));
+}
+
+fn list_dreams(dream_space: &HashMap<String, Box<ParsedDream>>) {
+    println!();
+    println!("Dreams realized:");
+    for dream_name in dream_space.keys() {
+        println!("{}", dream_name);
+    }
+    println!();
+}
+
+fn modify_dreams(dream_space: &mut HashMap<String, Box<ParsedDream>>) {
+    list_dreams(dream_space);
+    loop {
+        match c_i("'d'elete a Dream, 'i'nspect a Dream, 'e'xit Dream modification") {
+            'd' => delete_dream(dream_space),
+            'i' => println!("To inspect Dreams, load all Dreams from the main menu and continue."),
+            'e' => break,
+            _ => continue,
+        }
+    }
+}
+
+fn delete_dream(dream_space: &mut HashMap<String, Box<ParsedDream>>) {
+    let name_set: Vec<String> = dream_space.keys().map(|key| key.to_owned()).collect();
+    loop {
+        let dream_name_to_delete =
+            l_i("Enter the name of the Dream you're deleting, or, 'exit' to cancel");
+        if dream_name_to_delete == "exit" {
+            break;
+        }
+        match name_set.contains(&dream_name_to_delete) {
+            true => {
+                let answer = c_i("Confirm deletion of this Dream? 'Y' to confirm.");
+                if ['y', 'Y'].contains(&answer) {
+                    dream_space
+                        .remove(&dream_name_to_delete)
+                        .expect("Failed to give up on a Dream -- inspirational, but not intentional here...");
+                    println!("Dream deleted.");
+                    break;
+                } else {
+                    println!("Dream deletion aborted -- inspirational!");
+                    break;
+                }
+            }
+            false => println!("Couldn't find that Dream..."),
+        }
+    }
+}
+
+fn hello_world() {
+    print!("{}",
+    "
+    ~~~~~~~~~~~~~~~~~~~~
+    SpacemanDMM-Analysis-Companion  Copyright (C) 2025 Joshua 'Joan Metek Metekillot' Kidder
+                                    joanmetek@gmail.com
+                                    
+    This program comes with ABSOLUTELY NO WARRANTY; for details, see included LICENSE
+    This is free software, and you are welcome to redistribute it
+    under certain conditions; see included LICENSE for details
+
+    This program is only made possible by thousands of hours of volunteer development from SpacemanDMM and BYOND
+    See https://github.com/SpaceManiac/SpacemanDMM
+    The BYOND software is a copyrighted work, All Rights Reserved, courtesy of https://byond.com
+    ~~~~~~~~~~~~~~~~~~~~
+    ");
+}
 fn main() {
-    let dme_path = get_dme_path_from_dir();
-    let context = Context::default();
-    let mut annotation_tree = AnnotationTree::default();
-
-    let pre_processor = Preprocessor::new(&context, dme_path.to_owned()).unwrap();
-    let indent_processor = IndentProcessor::new(&context, pre_processor);
-    let mut parser = Parser::new(&context, indent_processor);
-    let annotation_tree_mutable = &mut annotation_tree;
-    parser.annotate_to(annotation_tree_mutable);
-
-    let obj_tree = parser.parse_object_tree();
-
-    dmc::run(&context, &obj_tree);
-    let indexed_paths_vector = index_files_by_index(&context);
+    hello_world();
+    let mut dream_space: HashMap<String, Box<ParsedDream>> = HashMap::new();
+    add_dream(&mut dream_space);
+    loop {
+        match c_i("'a'dd another dream\n'c'ontinue with your current dreams\n'l'ist your current dreams\n'm'odify your loaded dreams\n'q'uit dreaming"){
+            'a' => add_dream(&mut dream_space),
+            'c' => todo!(),
+            'l' => list_dreams(&dream_space),
+            'm' => modify_dreams(&mut dream_space),
+            'q' => todo!(),
+            _ => continue,
+        }
+    }
 }
