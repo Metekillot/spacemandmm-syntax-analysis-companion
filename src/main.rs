@@ -21,7 +21,6 @@ mod interface;
 use std::collections::*;
 use parsed_dream::{ParsedDream};
 use interface::{main_menu,path_nav};
-use std::sync::LazyLock;
 use dream_init::*;
 
 fn hello_world() {
