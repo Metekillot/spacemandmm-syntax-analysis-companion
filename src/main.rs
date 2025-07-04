@@ -14,14 +14,17 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-mod dream_init;
+#![feature(lazy_get)]
+mod dream_weaving;
 mod parsed_dream;
 mod interface;
 
+use rustyline::{history::MemHistory, Config, Editor};
 use std::collections::*;
 use parsed_dream::{ParsedDream};
 use interface::{main_menu,path_nav};
-use dream_init::*;
+use dream_weaving::*;
+use std::sync::LazyLock;
 
 fn hello_world() {
     print!("{}",
@@ -43,5 +46,16 @@ fn hello_world() {
 fn main() {
     hello_world();
     let mut dream_space: HashMap<String, Box<ParsedDream>> = HashMap::new();
-    path_nav();
+    let mut rl: Editor<(), MemHistory> = Editor::<(), MemHistory>::with_history(Config::default(), MemHistory::new())
+        .expect("Failed to create editor");
+    println!("Initiating add Dream for your first Dream...");
+    loop {
+        let first_dream = add_dream(&mut rl);
+        if let None = first_dream {
+            continue;
+        }
+        else {
+            dream_space
+        }
     }
+}

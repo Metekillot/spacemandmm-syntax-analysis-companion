@@ -1,8 +1,7 @@
-use super::dream_init::*;
+use super::dream_weaving::*;
 use super::parsed_dream::*;
 
-use rustyline::{history::MemHistory, Config, Editor};
-use std::borrow;
+use rustyline::{history::MemHistory, Editor};
 use std::env::{current_dir, set_current_dir};
 use std::path::{Path, PathBuf};
 use std::process::exit;
@@ -50,9 +49,7 @@ impl PathNavOperators {
 
 pub(crate) fn main_menu() {}
 
-pub(crate) fn path_nav() -> PathBuf {
-    let mut rl = Editor::<(), MemHistory>::with_history(Config::default(), MemHistory::new())
-        .expect("Failed to create editor");
+pub(crate) fn path_nav(rl_m: &mut Editor<(), MemHistory>) -> PathBuf {
     let cwd_call = || current_dir().expect("Failure to resolve current_dir()");
     let cwd_prompt_full = || {
         format!(
@@ -83,7 +80,7 @@ pub(crate) fn path_nav() -> PathBuf {
                 cwd_call().display()
             )
         };
-        let path_result = rl
+        let path_result = rl_m
             .readline(&prompt)
             .expect("Failed to parse path_nav() line entry");
         match path_result.as_str() {

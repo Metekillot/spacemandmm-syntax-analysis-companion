@@ -8,6 +8,7 @@ use dm::*;
 use std::path::*;
 
 pub(crate) struct ParsedDream {
+    dream_name: String,
     context: Context,
     annotation_tree: AnnotationTree,
     object_tree: ObjectTree,
@@ -25,6 +26,7 @@ impl ParsedDream {
 
         let object_tree = parser.parse_object_tree();
         dmc::run(&context, &object_tree);
+        let dream_name = crate::RL_M.read_line
         ParsedDream {
             context,
             annotation_tree,
