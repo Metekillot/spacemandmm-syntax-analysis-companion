@@ -1,10 +1,12 @@
 use super::dream_weaving::*;
 use super::parsed_dream::*;
+use crate::dream_analysis::AnalyzedDream;
 use crate::MenuChoice;
 
 use rustyline::Cmd;
 use rustyline::KeyCode;
 use rustyline::{history::MemHistory, Editor};
+use std::collections::HashMap;
 use std::env::{current_dir, set_current_dir};
 use std::path::{Path, PathBuf};
 use std::process::exit;
@@ -61,15 +63,13 @@ pub(crate) fn main_menu(rl_m: &mut Editor<(), MemHistory>) -> MenuChoice {
     loop {
         let response = rl_m.readline(prompt).unwrap();
         match response.as_str() {
-            "1" => {break MenuChoice::AddDream}
-            "2" => {break MenuChoice::ListDreams}
-            "3" => {break MenuChoice::ModifyDreams}
-            "4" => {break MenuChoice::QuitDreaming}
+            "1" => break MenuChoice::AddDream,
+            "2" => break MenuChoice::ListDreams,
+            "3" => break MenuChoice::ModifyDreams,
+            "4" => break MenuChoice::QuitDreaming,
             _ => continue,
         }
     }
-
-
 }
 
 pub(crate) fn path_nav(rl_m: &mut Editor<(), MemHistory>) -> PathBuf {
@@ -146,19 +146,110 @@ pub(crate) fn name_dream(rl_m: &mut Editor<(), MemHistory>) -> String {
     let mut dream_name = String::new();
     loop {
         let prompt = "Enter a name for the dream: ";
-        rl_m
-            .readline(prompt)
+        rl_m.readline(prompt)
             .expect("Failed to parse name_dream() line entry")
             .trim()
             .to_string();
         if dream_name.is_empty() {
             println!("Dream name cannot be empty. Please try again.");
         } else {
-            break dream_name
+            break dream_name;
         }
     }
 }
 
-pub(crate) fn post_analysis_menu(da_m: &mut Editor<(), MemHistory>) {
-    
+pub(crate) fn analysis_menu(
+    rl_m: &mut Editor<(), MemHistory>,
+    dream_analyses: HashMap<String, Box<AnalyzedDream>>,
+) {
+    loop {
+        let prompt = "
+        1. List analyzed Dreams
+        2. Modify analyzed Dreams
+        3. Explore analyzed Dreams
+        4. Add another Dream to analyze
+        0. Quit
+        ";
+        let response = rl_m
+            .readline(prompt)
+            .expect("Failed to get analysis choice");
+        if response.is_empty() {
+            continue;
+        }
+        match response.chars().nth(0).unwrap() {
+            '1' => todo!(),
+            '2' => todo!(),
+            '3' => explore_dreams(rl_m, &dream_analyses),
+            '4' => todo!(),
+            '0' => todo!(),
+            _ => continue,
+        }
+    }
+}
+
+pub(crate) fn explore_dreams(
+    rl_m: &mut Editor<(), MemHistory>,
+    dream_analyses: &HashMap<String, Box<AnalyzedDream>>,
+) {
+    let mut analyses_keys = dream_analyses.keys();
+    let mut prompt_grouping_tracker = 0;
+    let mut prompt = String::new();
+    prompt.push_str("\n");
+    loop {
+        loop {
+            if prompt_grouping_tracker < 0 {
+                break;
+            }
+            match analyses_keys.next() {
+                Some(key) => {
+                    prompt.push_str(&format!("    {}", key));
+                    prompt_grouping_tracker = prompt_grouping_tracker + 1;
+                }
+                None => {
+                    prompt.insert_str(0, &"         Choose the Dream to explore.\n");
+                    prompt_grouping_tracker = -1;
+                    break;
+                }
+            }
+            if prompt_grouping_tracker > 2 {
+                prompt.push_str("\n");
+                prompt_grouping_tracker = 0;
+            }
+        }
+        let response = rl_m
+            .readline(&prompt)
+            .expect("Failed to read line for Dream name to retrieve");
+        if let Some(dream_to_explore) = dream_analyses.get(&response) {
+            exploration_choice_menu(rl_m, dream_to_explore);
+        } else {
+            println!("That Dream name wasn't found.");
+            continue;
+        }
+    }
+}
+
+pub(crate) fn exploration_choice_menu(
+    rl_m: &mut Editor<(), MemHistory>,
+    dream_to_explore: &AnalyzedDream,
+) {
+    let prompt = "
+    1. Explore Procs
+    2. Explore Files
+    3. Explore Types
+    4. View completed explorations
+    0. Back to Dream Exploration Menu
+    ";
+    loop {
+        let response = rl_m
+            .readline(prompt)
+            .expect("Failed to read line for exploration choice");
+        match response.as_str() {
+            "1" => dream_to_explore.explore_proc(rl_m),
+            "2" => dream_to_explore.explore_file(rl_m),
+            "3" => dream_to_explore.explore_type(rl_m),
+            "4" => dream_to_explore.view_explorations(rl_m),
+            "0" => break,
+            _ => continue,
+        }
+    }
 }

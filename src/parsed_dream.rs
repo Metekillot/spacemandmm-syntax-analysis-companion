@@ -13,18 +13,19 @@ pub(crate) struct ParsedDream {
     pub(crate) object_tree: ObjectTree,
 }
 
-impl ParsedDream {
+impl ParsedDream { 
     pub(crate) fn new(dme_path: &PathBuf) -> ParsedDream {
         let context = Context::default();
         let mut annotation_tree = AnnotationTree::default();
-        let pre_processor = Preprocessor::new(&context, dme_path.to_owned()).unwrap();
-        let indent_processor = IndentProcessor::new(&context, pre_processor);
+        let mut pre_processor = Preprocessor::new(&context, dme_path.to_owned()).unwrap();
+        pre_processor.enable_annotations();
+        let indent_processor = IndentProcessor::new(&context, &mut pre_processor);
         let mut parser = Parser::new(&context, indent_processor);
         let annotation_tree_mutable = &mut annotation_tree;
         parser.annotate_to(annotation_tree_mutable);
-
         let object_tree = parser.parse_object_tree();
         dmc::run(&context, &object_tree);
+        annotation_tree_mutable.merge(pre_processor.take_annotations().expect("Failed to merge macro annotations in"));
         ParsedDream {
             context,
             annotation_tree,

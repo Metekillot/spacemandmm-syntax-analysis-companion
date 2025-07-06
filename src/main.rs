@@ -21,8 +21,8 @@ mod parsed_dream;
 mod dream_analysis;
 
 use dream_weaving::*;
-use dream_analysis::analyze_dreams;
-use interface::{main_menu, name_dream};
+use dream_analysis::{analyze_dreams};
+use interface::{main_menu, name_dream, analysis_menu};
 use parsed_dream::ParsedDream;
 use rustyline::{history::MemHistory, Config, Editor};
 use std::collections::*;
@@ -85,5 +85,5 @@ fn main() {
         }
     }
     let dream_exploration = analyze_dreams(&mut dream_space);
-    
+    analysis_menu(&mut rl, dream_exploration)
 }
