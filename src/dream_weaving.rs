@@ -1,11 +1,12 @@
-use super::interface;
+use super::interface::{path_nav,name_dream};
 use super::parsed_dream::*;
 
 use rustyline::{history::MemHistory, Editor};
 use std::path::*;
+use std::collections::HashMap;
 
 pub(crate) fn get_dme_path_from_dir(rl_m: &mut Editor<(), MemHistory>) -> Option<PathBuf> {
-    let dme_dir: PathBuf = interface::path_nav(rl_m);
+    let dme_dir: PathBuf = path_nav(rl_m);
     let mut dir_contents = dme_dir.read_dir().unwrap().map(|entry| entry.unwrap()); 
     match dir_contents.find(|entry|
         entry.path().ends_with("dme")
@@ -25,3 +26,22 @@ pub(crate) fn add_dream(rl_m: &mut Editor<(), MemHistory>) -> Option<ParsedDream
         Some(new_dream)
     }
 }
+
+pub(crate) fn confirm_new_dream_name(
+    rl_m: &mut Editor<(), MemHistory>,
+    dream_space: &HashMap<String, Box<ParsedDream>>,
+) -> String {
+    let mut dream_name = name_dream(rl_m);
+    if dream_space.contains_key(&dream_name) {
+        println!("Dream with that name already exists. If you want to replace that dream, enter the same name again.");
+        let confirmed_name = name_dream(rl_m);
+        if confirmed_name == dream_name {
+            println!("Replacement confirmed. {} will be replaced by parsing the new Dream.", dream_name);
+        } else {
+            println!("Replacement aborted. The new Dream will be named {} instead.", confirmed_name);
+            dream_name = confirmed_name;
+        }
+    } 
+        println!("Dream '{}' targeted; proceeding!", dream_name);
+        dream_name
+    }

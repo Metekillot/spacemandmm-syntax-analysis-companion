@@ -1,10 +1,14 @@
 use super::dream_weaving::*;
 use super::parsed_dream::*;
+use crate::MenuChoice;
 
+use rustyline::Cmd;
+use rustyline::KeyCode;
 use rustyline::{history::MemHistory, Editor};
 use std::env::{current_dir, set_current_dir};
 use std::path::{Path, PathBuf};
 use std::process::exit;
+
 enum PathNavOperators {
     Here,
     Parent,
@@ -47,13 +51,33 @@ impl PathNavOperators {
     }
 }
 
-pub(crate) fn main_menu() {}
+pub(crate) fn main_menu(rl_m: &mut Editor<(), MemHistory>) -> MenuChoice {
+    let prompt = "
+    1. Add Dream
+    2. List Dreams
+    3. Modify Dreams
+    4. Quit Dreaming
+    ";
+    loop {
+        let response = rl_m.readline(prompt).unwrap();
+        match response.as_str() {
+            "1" => {break MenuChoice::AddDream}
+            "2" => {break MenuChoice::ListDreams}
+            "3" => {break MenuChoice::ModifyDreams}
+            "4" => {break MenuChoice::QuitDreaming}
+            _ => continue,
+        }
+    }
+
+
+}
 
 pub(crate) fn path_nav(rl_m: &mut Editor<(), MemHistory>) -> PathBuf {
     let cwd_call = || current_dir().expect("Failure to resolve current_dir()");
     let cwd_prompt_full = || {
         format!(
             "
+        help : Display this message again
         . or null entry : View current directory (does not terminate)
         .. : navigate into parent directory (does not terminate)
         \\ : navigates to the root (does not terminate)
@@ -116,4 +140,25 @@ pub(crate) fn path_nav(rl_m: &mut Editor<(), MemHistory>) -> PathBuf {
             }
         }
     }
+}
+
+pub(crate) fn name_dream(rl_m: &mut Editor<(), MemHistory>) -> String {
+    let mut dream_name = String::new();
+    loop {
+        let prompt = "Enter a name for the dream: ";
+        rl_m
+            .readline(prompt)
+            .expect("Failed to parse name_dream() line entry")
+            .trim()
+            .to_string();
+        if dream_name.is_empty() {
+            println!("Dream name cannot be empty. Please try again.");
+        } else {
+            break dream_name
+        }
+    }
+}
+
+pub(crate) fn post_analysis_menu(da_m: &mut Editor<(), MemHistory>) {
+    
 }

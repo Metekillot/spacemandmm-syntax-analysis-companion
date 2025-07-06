@@ -16,15 +16,24 @@
 */
 #![feature(lazy_get)]
 mod dream_weaving;
-mod parsed_dream;
 mod interface;
+mod parsed_dream;
+mod dream_analysis;
 
+use dream_weaving::*;
+use dream_analysis::analyze_dreams;
+use interface::{main_menu, name_dream};
+use parsed_dream::ParsedDream;
 use rustyline::{history::MemHistory, Config, Editor};
 use std::collections::*;
-use parsed_dream::{ParsedDream};
-use interface::{main_menu,path_nav};
-use dream_weaving::*;
-use std::sync::LazyLock;
+
+enum MenuChoice {
+    AddDream,
+    ListDreams,
+    ModifyDreams,
+    QuitDreaming,
+    DreamInterpretation,
+}
 
 fn hello_world() {
     print!("{}",
@@ -46,16 +55,35 @@ fn hello_world() {
 fn main() {
     hello_world();
     let mut dream_space: HashMap<String, Box<ParsedDream>> = HashMap::new();
-    let mut rl: Editor<(), MemHistory> = Editor::<(), MemHistory>::with_history(Config::default(), MemHistory::new())
-        .expect("Failed to create editor");
+    let mut rl: Editor<(), MemHistory> =
+        Editor::<(), MemHistory>::with_history(Config::default(), MemHistory::new())
+            .expect("Failed to create editor");
     println!("Initiating add Dream for your first Dream...");
     loop {
+        let dream_name = name_dream(&mut rl);
         let first_dream = add_dream(&mut rl);
         if let None = first_dream {
             continue;
-        }
-        else {
-            dream_space
+        } else {
+            let new_dream = first_dream.unwrap();
+            dream_space.insert(dream_name, Box::new(new_dream));
+            break;
         }
     }
+    loop {
+        match main_menu(&mut rl) {
+            MenuChoice::AddDream => {
+                let new_dream_name = confirm_new_dream_name(&mut rl, &dream_space);
+                let new_dream = add_dream(&mut rl);
+                if new_dream.is_none() { continue }
+                dream_space.insert(new_dream_name, Box::new(new_dream.unwrap()));
+            }
+            MenuChoice::ListDreams => todo!(),
+            MenuChoice::ModifyDreams => todo!(),
+            MenuChoice::QuitDreaming => todo!(),
+            MenuChoice::DreamInterpretation => break,
+        }
+    }
+    let dream_exploration = analyze_dreams(&mut dream_space);
+    
 }
