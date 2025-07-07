@@ -1,16 +1,42 @@
 use super::dream_weaving::*;
 use super::parsed_dream::*;
-use crate::dream_analysis::AnalyzedDream;
 use crate::MenuChoice;
+use crate::dream_analysis::AnalyzedDream;
 
 use rustyline::Cmd;
 use rustyline::KeyCode;
-use rustyline::{history::MemHistory, Editor};
+use rustyline::{Editor, history::MemHistory};
 use std::collections::HashMap;
 use std::env::{current_dir, set_current_dir};
+use std::ops::DerefMut;
 use std::path::{Path, PathBuf};
 use std::process::exit;
+use std::str::FromStr;
 
+pub(crate) fn space_output<'a>(
+    mut to_space: impl Iterator<Item = &'a str>,
+    how_many: usize,
+) -> String {
+    let mut formed_output = String::new();
+    let mut line_break_signal: usize = 0;
+    loop {
+        match to_space.next() {
+            Some(value) => {
+                &mut formed_output.push_str(value);
+            }
+            None => {
+                &mut formed_output.push_str("\n");
+                break;
+            }
+        }
+        line_break_signal += 1;
+        if line_break_signal == how_many {
+            formed_output.push_str("\n");
+            line_break_signal = 0;
+        }
+    }
+    formed_output
+}
 enum PathNavOperators {
     Here,
     Parent,
@@ -32,11 +58,7 @@ impl PathNavOperators {
                             &this_entry.file_name().into_string().unwrap(),
                             (|| {
                                 let file_type = &this_entry.file_type().unwrap();
-                                if file_type.is_dir() {
-                                    "<DIR>"
-                                } else {
-                                    ""
-                                }
+                                if file_type.is_dir() { "<DIR>" } else { "" }
                             })()
                         )
                     })
@@ -67,6 +89,7 @@ pub(crate) fn main_menu(rl_m: &mut Editor<(), MemHistory>) -> MenuChoice {
             "2" => break MenuChoice::ListDreams,
             "3" => break MenuChoice::ModifyDreams,
             "4" => break MenuChoice::QuitDreaming,
+            "5" => break MenuChoice::DreamInterpretation,
             _ => continue,
         }
     }
@@ -146,7 +169,8 @@ pub(crate) fn name_dream(rl_m: &mut Editor<(), MemHistory>) -> String {
     let mut dream_name = String::new();
     loop {
         let prompt = "Enter a name for the dream: ";
-        rl_m.readline(prompt)
+        dream_name = rl_m
+            .readline(prompt)
             .expect("Failed to parse name_dream() line entry")
             .trim()
             .to_string();
@@ -160,7 +184,7 @@ pub(crate) fn name_dream(rl_m: &mut Editor<(), MemHistory>) -> String {
 
 pub(crate) fn analysis_menu(
     rl_m: &mut Editor<(), MemHistory>,
-    dream_analyses: HashMap<String, Box<AnalyzedDream>>,
+    mut dream_analyses: HashMap<String, Box<AnalyzedDream>>,
 ) {
     loop {
         let prompt = "
@@ -179,7 +203,7 @@ pub(crate) fn analysis_menu(
         match response.chars().nth(0).unwrap() {
             '1' => todo!(),
             '2' => todo!(),
-            '3' => explore_dreams(rl_m, &dream_analyses),
+            '3' => explore_dreams(rl_m, &mut dream_analyses),
             '4' => todo!(),
             '0' => todo!(),
             _ => continue,
@@ -189,37 +213,18 @@ pub(crate) fn analysis_menu(
 
 pub(crate) fn explore_dreams(
     rl_m: &mut Editor<(), MemHistory>,
-    dream_analyses: &HashMap<String, Box<AnalyzedDream>>,
+    dream_analyses: &mut HashMap<String, Box<AnalyzedDream>>,
 ) {
-    let mut analyses_keys = dream_analyses.keys();
-    let mut prompt_grouping_tracker = 0;
+    let analyses_keys = dream_analyses.keys();
     let mut prompt = String::new();
     prompt.push_str("\n");
+    prompt.push_str(&space_output(analyses_keys.map(|key| key.as_str()), 3));
+    prompt.insert_str(0, &"         Choose the Dream to explore.\n");
     loop {
-        loop {
-            if prompt_grouping_tracker < 0 {
-                break;
-            }
-            match analyses_keys.next() {
-                Some(key) => {
-                    prompt.push_str(&format!("    {}", key));
-                    prompt_grouping_tracker = prompt_grouping_tracker + 1;
-                }
-                None => {
-                    prompt.insert_str(0, &"         Choose the Dream to explore.\n");
-                    prompt_grouping_tracker = -1;
-                    break;
-                }
-            }
-            if prompt_grouping_tracker > 2 {
-                prompt.push_str("\n");
-                prompt_grouping_tracker = 0;
-            }
-        }
         let response = rl_m
             .readline(&prompt)
             .expect("Failed to read line for Dream name to retrieve");
-        if let Some(dream_to_explore) = dream_analyses.get(&response) {
+        if let Some(dream_to_explore) = dream_analyses.get_mut(&response) {
             exploration_choice_menu(rl_m, dream_to_explore);
         } else {
             println!("That Dream name wasn't found.");
@@ -230,7 +235,7 @@ pub(crate) fn explore_dreams(
 
 pub(crate) fn exploration_choice_menu(
     rl_m: &mut Editor<(), MemHistory>,
-    dream_to_explore: &AnalyzedDream,
+    dream_to_explore: &mut AnalyzedDream,
 ) {
     let prompt = "
     1. Explore Procs
@@ -251,5 +256,6 @@ pub(crate) fn exploration_choice_menu(
             "0" => break,
             _ => continue,
         }
+        break;
     }
 }
