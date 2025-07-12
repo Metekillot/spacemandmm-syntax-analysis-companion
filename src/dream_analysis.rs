@@ -12,11 +12,7 @@ use rustyline::history::MemHistory;
 use std::collections::HashMap;
 use std::iter::FlatMap;
 use std::ops::Range;
-
-fn annotation_structure_inspection(range_inspected: Range<Location>, annotation_tree: &AnnotationTree) {
-
-}
-
+use std::path::PathBuf;
 
 #[derive(Debug)]
 pub(crate) struct AnalyzedDream {
@@ -97,16 +93,20 @@ impl AnalyzedDream {
         annotation_documentation
     }
 
-    pub(crate) fn explore_proc(&mut self, rl_m: &mut Editor<(), MemHistory>) {
-        todo!()
-    }
-
-    pub(crate) fn explore_file(&self, rl_m: &mut Editor<(), MemHistory>) {
-        todo!()
-    }
-
-    pub(crate) fn explore_type(&self, rl_m: &mut Editor<(), MemHistory>) {
-        todo!()
+    pub(crate) fn analyze_file(&mut self, file_for: PathBuf) {
+        let context = &self.parsed_dream.context;
+        let annotation_tree = &self.parsed_dream.annotation_tree;
+        let mut annotation_iter = annotation_tree.iter().filter(|iteration|
+        iteration.0.start.file == context.get_file(file_for.as_path()).unwrap());
+        let line_track: &mut usize = &mut 0;
+        annotation_iter.for_each(|iteration|
+        {
+            if *line_track != iteration.0.start.line as usize {
+                *line_track = iteration.0.start.line as usize;
+                print!("\n--new_line--\nline {}: ", line_track);
+            }
+            print!("{:?} ", iteration.1);
+        });
     }
 
     pub(crate) fn view_explorations(&self, rl_m: &mut Editor<(), MemHistory>) {

@@ -17,7 +17,7 @@ pub(crate) fn debug_run(run_type: Option<RunType>) {
             RunType::TypeRun => type_run(None),
             RunType::FileRun => file_run(None),
         },
-        None => proc_run(None),
+        None => file_run(None),
     }
 }
 
@@ -28,10 +28,6 @@ fn setup_run() -> AnalyzedDream {
     AnalyzedDream::new(
         debug_dream
     )
-}
-
-fn inspect_tracker() {
-
 }
 
 
@@ -64,7 +60,9 @@ fn type_run(run_args: Option<[&str; 3]>) {
 fn file_run(run_args: Option<[&str; 1]>) {
     let file_for: &str;
     if run_args.is_none() {
-        proc_run(None)
-    }
-    let debug_analyze = setup_run();
+        file_for = "code/modules/tgui/tgui.dm"
+    } else { file_for = run_args.unwrap()[0] }
+    let debug_analyze = &mut setup_run();
+    debug_analyze.analyze_file( std::path::PathBuf::from(file_for));
+    exit(0)
 }

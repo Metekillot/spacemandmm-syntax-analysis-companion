@@ -249,10 +249,10 @@ pub(crate) fn exploration_choice_menu(
             .readline(prompt)
             .expect("Failed to read line for exploration choice");
         match response.as_str() {
-            "1" => dream_to_explore.explore_proc(rl_m),
-            "2" => dream_to_explore.explore_file(rl_m),
-            "3" => dream_to_explore.explore_type(rl_m),
-            "4" => dream_to_explore.view_explorations(rl_m),
+            "1" => todo!(),
+            "2" => todo!(),
+            "3" => todo!(),
+            "4" => todo!(),
             "0" => break,
             _ => continue,
         }
