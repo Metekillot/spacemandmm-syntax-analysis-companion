@@ -17,7 +17,7 @@ pub(crate) fn debug_run(run_type: Option<RunType>) {
             RunType::TypeRun => type_run(None),
             RunType::FileRun => file_run(None),
         },
-        None => inspect_tracker(),
+        None => proc_run(None),
     }
 }
 

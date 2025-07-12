@@ -10,6 +10,7 @@ use dm::{Context, FileList, Location};
 use rustyline::Editor;
 use rustyline::history::MemHistory;
 use std::collections::HashMap;
+use std::iter::FlatMap;
 use std::ops::Range;
 
 fn annotation_structure_inspection(range_inspected: Range<Location>, annotation_tree: &AnnotationTree) {
@@ -68,30 +69,31 @@ impl AnalyzedDream {
         let proc_code = proc_got.clone().code.unwrap();
         let mut code_iter = proc_code.iter();
         let start_location = code_iter.next().unwrap().location;
-        let end_statement = code_iter.last().unwrap().to_owned();
-        let end_location: Location;
-        match end_statement.elem {
-            Statement::While { condition, block } => {},
-            Statement::DoWhile { block, condition } => {},
-            Statement::ForInfinite { block } => {},
-            Statement::ForList(list_box_statement) => {},
-            Statement::ForLoop { init, test, inc, block } => {},
-            Statement::ForRange(range_ox_statement) => {},
-            Statement::If { arms, else_arm } => {},
-            Statement::Spawn { delay, block } => {},
-            Statement::
+        let annotations_got = annotation_tree.get_location(start_location);
+        let mut cloned_annotations_got = annotations_got.clone();
+        let proc_body: (Vec<Ident>, usize) = match cloned_annotations_got.nth(0).unwrap().1 {
+            Annotation::ProcBody(body, idx) => {(body.clone(), idx.clone())},
+            _ => panic!("It wasn't a proc body."),
+        };
+        let mut annotation_documentation: Vec<String> = Vec::new();
+        for (iter_location, _annotation) in annotation_tree.iter() {
+            match _annotation {
+                Annotation::ProcBody(matching_body, _) => if matching_body == &proc_body.0 {
+                    let line_check: &mut usize = &mut 0;
+                    annotation_tree.get_range_raw(iter_location).for_each(|interval_pair|
+                        {
+                    if interval_pair.0.start.line as usize != *line_check {
+                        *line_check = interval_pair.0.start.line as usize;
+                        print!("\n-new_line-\nline {}: ", line_check);
+                    }
+                    print!("{:?} ", interval_pair.1);
+                }
+                );
+                }
+                _ => continue,
+            }
         }
-        let annotation_documentation = annotation_tree
-            .get_range(Range {
-                start: start_location,
-                end: end_location,
-            })
-            .map(|iteration| {
-                println!("{:?}", iteration.1);
-                format!("{:?}", iteration.1)
-            })
-            .collect();
-        annotation_structure_inspection(Range{start: start_location, end: end_location}, annotation_tree);
+        println!("Count of matching annotations: {}", annotation_documentation.len());
         annotation_documentation
     }
 
