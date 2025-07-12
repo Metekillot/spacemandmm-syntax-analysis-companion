@@ -212,6 +212,7 @@ version = "0.1.0"
 dependencies = [
  "dreamchecker",
  "dreammaker",
+ "interval-tree",
  "regex",
  "rustyline",
  "serde",

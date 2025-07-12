@@ -7,6 +7,7 @@ use dm::preprocessor::*;
 use dm::*;
 use std::path::*;
 
+#[derive(Debug)]
 pub(crate) struct ParsedDream {
     pub(crate) context: Context,
     pub(crate) annotation_tree: AnnotationTree,

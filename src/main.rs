@@ -14,18 +14,19 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-#![feature(lazy_get)]
+mod debug_run;
+mod dream_analysis;
 mod dream_weaving;
 mod interface;
 mod parsed_dream;
-mod dream_analysis;
 
+use dream_analysis::analyze_dreams;
 use dream_weaving::*;
-use dream_analysis::{analyze_dreams};
-use interface::{main_menu, name_dream, analysis_menu};
+use interface::{analysis_menu, main_menu, name_dream};
 use parsed_dream::ParsedDream;
-use rustyline::{history::MemHistory, Config, Editor};
+use rustyline::{Config, Editor, history::MemHistory};
 use std::collections::*;
+use std::env;
 
 enum MenuChoice {
     AddDream,
@@ -54,6 +55,35 @@ fn hello_world() {
 }
 fn main() {
     hello_world();
+    let mut arguments = env::args();
+    match arguments.nth(1) {
+        Some(arg) => {
+            if arg == "--debug" {
+                use debug_run;
+                println!("Debug mode. Automatic choices & limited input.");
+                match arguments.next() {
+                    Some(debug_type) => match debug_type.as_str() {
+                        "proc" => debug_run::debug_run(Some(debug_run::RunType::ProcRun)),
+                        "file" => debug_run::debug_run(Some(debug_run::RunType::FileRun)),
+                        "type" => debug_run::debug_run(Some(debug_run::RunType::TypeRun)),
+                        _ => {
+                            println!("\"{}\" wasn't understood, defaulting", debug_type);
+                            debug_run::debug_run(Some(debug_run::RunType::ProcRun))
+                        }
+                    },
+                    None => debug_run::debug_run(None),
+                }
+                std::process::exit(0);
+            } else {
+                println!(
+                    "{} wasn't understood as an argument to the process, so ignoring.",
+                    arg
+                );
+            }
+        }
+        None => {}
+    }
+    todo!("Checking arguments");
     let mut dream_space: HashMap<String, Box<ParsedDream>> = HashMap::new();
     let mut rl: Editor<(), MemHistory> =
         Editor::<(), MemHistory>::with_history(Config::default(), MemHistory::new())
@@ -75,7 +105,9 @@ fn main() {
             MenuChoice::AddDream => {
                 let new_dream_name = confirm_new_dream_name(&mut rl, &dream_space);
                 let new_dream = add_dream(&mut rl);
-                if new_dream.is_none() { continue }
+                if new_dream.is_none() {
+                    continue;
+                }
                 dream_space.insert(new_dream_name, Box::new(new_dream.unwrap()));
             }
             MenuChoice::ListDreams => todo!(),
