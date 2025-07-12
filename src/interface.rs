@@ -249,13 +249,24 @@ pub(crate) fn exploration_choice_menu(
             .readline(prompt)
             .expect("Failed to read line for exploration choice");
         match response.as_str() {
-            "1" => dream_to_explore.explore_proc(rl_m),
-            "2" => dream_to_explore.explore_file(rl_m),
-            "3" => dream_to_explore.explore_type(rl_m),
-            "4" => dream_to_explore.view_explorations(rl_m),
+            "1" => todo!(),
+            "2" => todo!(),
+            "3" => todo!(),
+            "4" => todo!(),
             "0" => break,
             _ => continue,
         }
         break;
+    }
+}
+
+pub(crate) fn dme_from_dir(dme_dir: PathBuf) -> Option<PathBuf> {
+    let mut dir_contents = dme_dir.read_dir().unwrap().map(|entry| entry.unwrap());
+    match dir_contents.find(|entry| match entry.path().extension() {
+        Some(extension) => extension == std::ffi::OsStr::new("dme"),
+        _ => false,
+    }) {
+        Some(found_dme) => Some(found_dme.path()),
+        None => None,
     }
 }

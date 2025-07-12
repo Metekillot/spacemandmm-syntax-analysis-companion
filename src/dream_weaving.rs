@@ -1,4 +1,4 @@
-use super::interface::{name_dream, path_nav};
+use super::interface::{name_dream, path_nav, dme_from_dir};
 use super::parsed_dream::*;
 
 use rustyline::{Editor, history::MemHistory};
@@ -8,14 +8,7 @@ use std::path::*;
 
 pub(crate) fn get_dme_path_from_dir(rl_m: &mut Editor<(), MemHistory>) -> Option<PathBuf> {
     let dme_dir: PathBuf = path_nav(rl_m);
-    let mut dir_contents = dme_dir.read_dir().unwrap().map(|entry| entry.unwrap());
-    match dir_contents.find(|entry| match entry.path().extension() {
-        Some(extension) => extension == OsStr::new("dme"),
-        _ => false,
-    }) {
-        Some(found_dme) => Some(found_dme.path()),
-        None => None,
-    }
+    dme_from_dir(dme_dir)
 }
 
 pub(crate) fn add_dream(rl_m: &mut Editor<(), MemHistory>) -> Option<ParsedDream> {

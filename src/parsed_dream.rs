@@ -7,6 +7,7 @@ use dm::preprocessor::*;
 use dm::*;
 use std::path::*;
 
+#[derive(Debug)]
 pub(crate) struct ParsedDream {
     pub(crate) context: Context,
     pub(crate) annotation_tree: AnnotationTree,
@@ -21,8 +22,8 @@ impl ParsedDream {
         println!("Annotation Tree templated...");
         let mut pre_processor = Preprocessor::new(&context, dme_path.to_owned()).unwrap();
         println!("Preprocessor created...");
-        pre_processor.enable_annotations();
-        println!("Preprocessor annotations enabled...");
+        /*pre_processor.enable_annotations();
+        println!("Preprocessor annotations enabled...");*/
         let indent_processor = IndentProcessor::new(&context, &mut pre_processor);
         println!("Indent processor created...");
         let mut parser = Parser::new(&context, indent_processor);
@@ -34,12 +35,12 @@ impl ParsedDream {
         println!("Object Tree created...");
         dmc::run(&context, &object_tree);
         println!("Dreamchecker analysis completed...");
-        annotation_tree_mutable.merge(
+        /*annotation_tree_mutable.merge(
             pre_processor
                 .take_annotations()
                 .expect("Failed to merge macro annotations in"),
         );
-        println!("Annotations merged between Parser and Preprocessor...");
+        println!("Annotations merged between Parser and Preprocessor...");*/
         ParsedDream {
             context,
             annotation_tree,
