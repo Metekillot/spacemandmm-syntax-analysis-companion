@@ -5,6 +5,7 @@ use dm::objtree::*;
 use dm::parser::*;
 use dm::preprocessor::*;
 use dm::*;
+use std::cell::RefCell;
 use std::path::*;
 
 #[derive(Debug)]
@@ -33,8 +34,10 @@ impl ParsedDream {
         println!("Parser annotations enabled...");
         let object_tree = parser.parse_object_tree();
         println!("Object Tree created...");
-        dmc::run(&context, &object_tree);
+        let annotation_refcell = RefCell::new(annotation_tree);
+        dmc::run(&context, &object_tree, Some(&annotation_refcell));
         println!("Dreamchecker analysis completed...");
+        let annotation_tree = annotation_refcell.take();
         /*annotation_tree_mutable.merge(
             pre_processor
                 .take_annotations()
