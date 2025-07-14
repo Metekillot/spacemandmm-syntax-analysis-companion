@@ -17,14 +17,14 @@ pub(crate) fn debug_run(run_type: Option<RunType>) {
             RunType::TypeRun => type_run(None),
             RunType::FileRun => file_run(None),
         },
-        None => file_run(None),
+        None => proc_run(None),
     }
 }
 
 fn setup_run() -> AnalyzedDream {
     let dme_dir = std::path::PathBuf::from(std::env::var("SDMM_DEBUG_DATA_DIR").expect("No SDMM_DEBUG_DATA_DIR environment variable set."));
     let dme = interface::dme_from_dir(dme_dir).expect("Found no .dme for debug run");
-    let mut debug_dream = crate::parsed_dream::ParsedDream::new(&dme);
+    let mut debug_dream: crate::parsed_dream::ParsedDream = crate::parsed_dream::ParsedDream::new(&dme);
     AnalyzedDream::new(
         debug_dream
     )

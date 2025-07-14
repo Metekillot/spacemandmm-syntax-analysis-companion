@@ -5,9 +5,10 @@ edition = "2024"
 
 [dependencies]
 dm = { package = "dreammaker", git = "https://github.com/Metekillot/spacemandmm.git", branch = "auto-refactor-mods", version = "0.1.0" }
-dmc = { package = "dreamchecker", git = "https://github.com/Metekillot/spacemandmm.git", branch = "auto-refactor-mods" }
-interval-tree = { package = "interval-tree", git = "https://github.com/Metekillot/spacemandmm.git", branch = "auto-refactor-mods" }
+dmc = { package = "dreamchecker", git = "https://github.com/Metekillot/spacemandmm.git", branch = "auto-refactor-mods", version = "1.10.0" }
+interval-tree = { package = "interval-tree", git = "https://github.com/Metekillot/spacemandmm.git", branch = "auto-refactor-mods", version = "0.8.0" }
 regex = "1.11.1"
+ron = "0.10.1"
 rustyline = { version = "16.0.0", features = ["custom-bindings"] }
 serde = "*"
 serde_json = "*"

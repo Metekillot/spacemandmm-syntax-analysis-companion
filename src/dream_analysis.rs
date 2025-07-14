@@ -14,7 +14,6 @@ use std::iter::FlatMap;
 use std::ops::Range;
 use std::path::PathBuf;
 
-#[derive(Debug)]
 pub(crate) struct AnalyzedDream {
     pub(crate) parsed_dream: ParsedDream,
     pub(crate) explored_types: HashMap<String, HashMap<String, Vec<String>>>,

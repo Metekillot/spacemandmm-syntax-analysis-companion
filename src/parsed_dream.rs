@@ -5,10 +5,11 @@ use dm::objtree::*;
 use dm::parser::*;
 use dm::preprocessor::*;
 use dm::*;
+use dmc::{AnalyzeObjectTree};
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::path::*;
 
-#[derive(Debug)]
 pub(crate) struct ParsedDream {
     pub(crate) context: Context,
     pub(crate) annotation_tree: AnnotationTree,
