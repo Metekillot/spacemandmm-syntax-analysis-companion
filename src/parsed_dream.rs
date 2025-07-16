@@ -8,6 +8,9 @@ use dm::*;
 use dmc::{AnalyzeObjectTree};
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::env::set_current_dir;
+use std::io::Write;
+use std::os::windows::fs::FileExt;
 use std::path::*;
 
 pub(crate) struct ParsedDream {
@@ -24,8 +27,8 @@ impl ParsedDream {
         println!("Annotation Tree templated...");
         let mut pre_processor = Preprocessor::new(&context, dme_path.to_owned()).unwrap();
         println!("Preprocessor created...");
-        /*pre_processor.enable_annotations();
-        println!("Preprocessor annotations enabled...");*/
+        pre_processor.enable_annotations();
+        println!("Preprocessor annotations enabled...");
         let indent_processor = IndentProcessor::new(&context, &mut pre_processor);
         println!("Indent processor created...");
         let mut parser = Parser::new(&context, indent_processor);
@@ -35,16 +38,18 @@ impl ParsedDream {
         println!("Parser annotations enabled...");
         let object_tree = parser.parse_object_tree();
         println!("Object Tree created...");
-        let annotation_refcell = RefCell::new(annotation_tree);
-        dmc::run(&context, &object_tree, Some(&annotation_refcell));
-        println!("Dreamchecker analysis completed...");
-        let annotation_tree = annotation_refcell.take();
-        /*annotation_tree_mutable.merge(
+        annotation_tree_mutable.merge(
             pre_processor
                 .take_annotations()
                 .expect("Failed to merge macro annotations in"),
         );
-        println!("Annotations merged between Parser and Preprocessor...");*/
+        println!("Annotations merged between Parser and Preprocessor...");
+        let annotation_refcell: RefCell<AnnotationTree> = RefCell::new(annotation_tree);
+        dmc::run(&context, &object_tree, Some(&annotation_refcell));
+        //dmc::serialize_to_files(&context, &object_tree, Some(&annotation_refcell)).unwrap();
+
+        println!("Dreamchecker analysis completed...");
+        let annotation_tree = annotation_refcell.take();
         ParsedDream {
             context,
             annotation_tree,
